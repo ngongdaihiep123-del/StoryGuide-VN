@@ -1,124 +1,124 @@
-# 剧情指导 StoryGuide（SillyTavern 扩展）
+# Hướng dẫn Cốt truyện StoryGuide (Extension SillyTavern)
 
 ## v0.9.5
-- 改进：蓝灯索引匹配会综合“最近 N 条消息正文 + 本次用户输入”（可在面板里关闭或调整用户输入权重）。
+- Cải tiến: Khớp chỉ mục Đèn Xanh sẽ tổng hợp "N tin nhắn chính văn gần nhất + đầu vào người dùng lần này" (có thể tắt hoặc điều chỉnh trọng số đầu vào người dùng trong bảng điều khiển).
 
 ## v0.9.3
-- 新增：蓝灯索引触发的“起始楼层限制”（仅在达到指定 AI 回复楼层后才开始注入触发词）。
+- Mới: "Giới hạn tầng bắt đầu" kích hoạt chỉ mục Đèn Xanh (chỉ bắt đầu tiêm từ khóa kích hoạt sau khi đạt đến số tầng trả lời của AI được chỉ định).
 
 ## v0.8.9
-- 自动总结（独立API）支持“刷新模型列表”按钮与下拉选择（/models）。
+- Tự động tóm tắt (API độc lập) hỗ trợ nút "Làm mới danh sách model" và menu thả xuống chọn model (/models).
 
 ## v0.8.5
-- 修复：部分 SillyTavern 版本下 /createentry 不会直接返回 UID，导致“写入失败但实际上已写入”的误报。
-  - 现在会在创建后通过 /findentry 反查 UID，再设置 key/comment/constant 等字段（避免蓝灯条目无法设为常开）。
+- Sửa lỗi: Trên một số phiên bản SillyTavern, /createentry không trả về UID trực tiếp, dẫn đến báo sai "ghi thất bại nhưng thực tế đã ghi".
+  - Hiện tại sẽ tra ngược UID qua /findentry sau khi tạo, rồi mới thiết lập các trường key/comment/constant (tránh việc mục Đèn Xanh không thể thiết lập thường trực).
 
 ## v0.8.4
-- 总结写入支持“双世界书”：
-  - 绿灯世界书（关键词触发，写入当前聊天绑定世界书或指定文件）
-  - 蓝灯世界书（常开索引，仅支持写入指定世界书文件名）
-- 新增“蓝灯索引 → 绿灯触发”功能：
-  - 用户发送消息时，读取前 N 条正文，与蓝灯索引做相似度匹配
-  - 自动把命中的关键词以隐藏注释形式注入到用户消息末尾，用于触发绿灯世界书条目
-  - 支持导入蓝灯世界书 JSON 到索引缓存（也会自动把新总结追加到缓存）
+- Tóm tắt ghi vào hỗ trợ "Song Worldbook":
+  - Worldbook Đèn Xanh Lá (Kích hoạt bằng từ khóa, ghi vào Worldbook liên kết chat hiện tại hoặc tệp chỉ định)
+  - Worldbook Đèn Xanh (Chỉ mục thường mở, chỉ hỗ trợ ghi vào tên tệp Worldbook chỉ định)
+- Mới: Chức năng "Chỉ mục Đèn Xanh → Kích hoạt Đèn Xanh Lá":
+  - Khi người dùng gửi tin nhắn, đọc N dòng chính văn trước đó, khớp độ tương đồng với chỉ mục Đèn Xanh
+  - Tự động tiêm các từ khóa trúng đích dưới dạng chú thích ẩn vào cuối tin nhắn người dùng, dùng để kích hoạt mục Worldbook Đèn Xanh Lá
+  - Hỗ trợ nhập JSON Worldbook Đèn Xanh vào bộ nhớ đệm chỉ mục (cũng sẽ tự động thêm tóm tắt mới vào bộ nhớ đệm)
 
 ## v0.8.3
-- 总结功能支持自定义提示词
-  - System 提示词（控制总结风格/重点）
-  - User 模板（支持占位符：{{fromFloor}} {{toFloor}} {{chunk}}）
-  - 插件会强制要求输出 JSON：{title, summary, keywords[]}，避免写入世界书失败
+- Chức năng tóm tắt hỗ trợ tùy chỉnh prompt
+  - Prompt System (Kiểm soát phong cách/trọng tâm tóm tắt)
+  - Mẫu User (Hỗ trợ placeholder: {{fromFloor}} {{toFloor}} {{chunk}})
+  - Extension sẽ buộc yêu cầu xuất JSON: {title, summary, keywords[]}, tránh ghi vào Worldbook thất bại
 
 ## v0.8.0
-- 新增“自动总结”功能（独立于剧情提示的 API 设置）
-  - 可按“楼层间隔”自动总结（支持按 AI 回复计数/按全部消息计数）
-  - 每次总结会提取关键词，可一键写入世界书条目，并自动启用（绿灯）
-- 面板新增“总结”标签：查看最近总结并一键复制
+- Mới: Chức năng "Tự động tóm tắt" (Cài đặt API độc lập với gợi ý cốt truyện)
+  - Có thể tự động tóm tắt theo "Khoảng cách tầng" (Hỗ trợ đếm theo trả lời của AI/đếm theo tất cả tin nhắn)
+  - Mỗi lần tóm tắt sẽ trích xuất từ khóa, có thể ghi vào mục Worldbook bằng một cú nhấp, và tự động bật (Đèn Xanh Lá)
+- Bảng điều khiển thêm tab "Tóm tắt": Xem tóm tắt gần đây và sao chép bằng một cú nhấp
 
-## v0.5.1：世界书导入注入 + 预设导入导出（并修复 worldBookText 报错）
+## v0.5.1：Nhập và tiêm Worldbook + Nhập/Xuất cài đặt sẵn (và sửa lỗi worldBookText)
 
-### 为什么会出现 `worldBookText is not defined`
-旧版把世界书文本当作变量 `worldBookText` 插到 buildSnapshot 里，但没有声明该变量，所以导入后仍会报错。
+### Tại sao lại xuất hiện `worldBookText is not defined`
+Bản cũ chèn văn bản Worldbook dưới dạng biến `worldBookText` vào buildSnapshot, nhưng không khai báo biến đó, nên sau khi nhập vẫn báo lỗi.
 
-v0.5.1 已改为：导入后存进 `settings.worldbookJson`，并在 buildSnapshot 内通过 `buildWorldbookBlock()` 生成要注入的文本。
+v0.5.1 đã sửa thành: Sau khi nhập sẽ lưu vào `settings.worldbookJson`, và tạo văn bản cần tiêm thông qua `buildWorldbookBlock()` bên trong buildSnapshot.
 
-### 世界书（World Info / Lorebook）
-- 导入：面板 →「预设与世界书」→ 导入世界书JSON
-- 勾选：在分析输入中注入世界书
-- 模式：
-  - active：仅注入可能激活条目（关键词匹配最近消息）
-  - all：注入全部条目
+### Sách Thế Giới (World Info / Lorebook)
+- Nhập: Bảng điều khiển → "Cài đặt sẵn và Worldbook" → Nhập JSON Worldbook
+- Tích chọn: Tiêm Worldbook vào đầu vào phân tích
+- Chế độ:
+  - active: Chỉ tiêm các mục có khả năng kích hoạt (Từ khóa khớp với tin nhắn gần đây)
+  - all: Tiêm tất cả các mục
 
-### 预设
-- 导出预设：可选是否包含 API Key
-- 导入预设：覆盖当前插件设置（建议导入后刷新页面一次）
-
-
-## v0.7.4
-- 优化面板按钮布局（不再竖排）
-- 移除“本聊天专用”区块（与自定义提示重复）
+### Cài đặt sẵn
+- Xuất cài đặt sẵn: Tùy chọn có bao gồm API Key hay không
+- Nhập cài đặt sẵn: Ghi đè cài đặt extension hiện tại (Khuyên bạn nên làm mới trang một lần sau khi nhập)
 
 
 ## v0.7.4
-- 修复面板按钮竖排（保存设置/分析/刷新模型等）
-- 缩小扩展列表中的“打开面板”按钮占用
+- Tối ưu hóa bố cục nút bảng điều khiển (không còn xếp dọc)
+- Xóa khối "Dành riêng cho chat này" (trùng lặp với prompt tùy chỉnh)
 
 
 ## v0.7.4
-- 修复扩展页“打开面板”按钮仍竖排/占用过大
+- Sửa lỗi nút bảng điều khiển xếp dọc (Lưu cài đặt/Phân tích/Làm mới model v.v.)
+- Thu nhỏ kích thước nút "Mở bảng điều khiển" trong danh sách extension
 
 
 ## v0.7.4
-- 移除顶栏📘入口按钮（仅保留扩展页“打开面板”与聊天区生成/重Roll按钮）
+- Sửa lỗi nút "Mở bảng điều khiển" ở trang extension vẫn xếp dọc/chiếm quá nhiều chỗ
 
 
 ## v0.7.4
-- 修复“同一模块内容被拆成多个卡片/不在同一框内”的显示问题（内部列表/编号不再被当成同级块）
+- Xóa nút lối vào 📘 trên thanh điều hướng (Chỉ giữ lại "Mở bảng điều khiển" ở trang extension và nút Tạo/Re-Roll ở khu vực chat)
 
 
 ## v0.7.4
-- 面板新增“最大回复token数”（独立API）输入框，显示/设置自定义API的最大token
+- Sửa lỗi hiển thị "Nội dung cùng một module bị tách thành nhiều thẻ/không nằm cùng một khung" (Danh sách/đánh số bên trong không còn bị coi là khối cùng cấp)
 
 
 ## v0.7.4
-- 修复独立API请求 max_tokens 固定为 4096 的问题：现在会使用你设置的“最大回复token数”
-- 直连 fallback 也会携带 max_tokens/top_p
+- Bảng điều khiển thêm khung nhập "Số token phản hồi tối đa" (API độc lập), hiển thị/thiết lập token tối đa cho API tùy chỉnh
 
 
 ## v0.7.4
-- 修复列表型模块（如【1】【2】提示）被拆成多个块：标准模式下合并为同一模块卡片内
-- 将缩进从2空格调整为4空格，确保内部编号/列表不会跑出模块卡片
+- Sửa lỗi yêu cầu API độc lập cố định max_tokens là 4096: Hiện tại sẽ sử dụng "Số token phản hồi tối đa" bạn đã cài đặt
+- Kết nối trực tiếp fallback cũng sẽ mang theo max_tokens/top_p
 
 
 ## v0.7.4
-- 每个模块卡片支持点击“缩放放大/还原”（ESC/点击背景关闭）
+- Sửa lỗi module dạng danh sách (như gợi ý [1][2]) bị tách thành nhiều khối: Trong chế độ tiêu chuẩn sẽ gộp vào trong cùng một thẻ module
+- Điều chỉnh thụt lề từ 2 dấu cách lên 4 dấu cách, đảm bảo đánh số/danh sách bên trong không bị chạy ra ngoài thẻ module
 
 
 ## v0.7.4
-- 独立API新增 stream 选项（可切换 stream=true/false）
-- 支持解析常见 OpenAI SSE 流式返回（内部仍会等待结束后再追加分析框）
+- Mỗi thẻ module hỗ trợ nhấp "Phóng to/Thu nhỏ" (ESC/Nhấp nền để đóng)
 
 
 ## v0.7.4
-- 设置面板适配手机端：左右栏改为上下单栏，避免横向溢出；使用单滚动区域
+- API độc lập thêm tùy chọn stream (có thể chuyển đổi stream=true/false)
+- Hỗ trợ phân tích phản hồi luồng OpenAI SSE phổ biến (bên trong vẫn sẽ đợi kết thúc rồi mới thêm khung phân tích)
 
 
 ## v0.7.4
-- 面板“分析当前剧情”结果会同步追加到聊天末尾（面板报告框），解析失败也会追加原文
-- 独立API输出非JSON时会自动重试一次强制JSON提示
-- inline 解析失败时也会在聊天末尾显示原文，避免“有输出但看不到”
+- Bảng cài đặt tương thích với di động: Cột trái phải đổi thành cột đơn trên dưới, tránh tràn ngang; sử dụng vùng cuộn đơn
 
 
 ## v0.7.4
-- 卡片点击行为调整：由“放大弹窗”改为“缩放/折叠（就地收起/展开）”
+- Kết quả "Phân tích cốt truyện hiện tại" trên bảng điều khiển sẽ được đồng bộ thêm vào cuối đoạn chat (khung báo cáo bảng điều khiển), phân tích thất bại cũng sẽ thêm văn bản gốc
+- Khi API độc lập xuất ra không phải JSON sẽ tự động thử lại một lần với gợi ý ép buộc JSON
+- Khi phân tích inline thất bại cũng sẽ hiển thị văn bản gốc ở cuối đoạn chat, tránh việc "có đầu ra nhưng không nhìn thấy"
 
 
 ## v0.7.4
-- 卡片折叠样式调整：折叠后仅显示标题（如“与原著对照 · 偏离影响”）
+- Điều chỉnh hành vi nhấp thẻ: Từ "Phóng to popup" đổi thành "Thu phóng/Thu gọn (Thu lại/Mở ra tại chỗ)"
 
 
 ## v0.7.4
-- 修复手机端面板顶部标题栏被挤出屏幕：移动端不再垂直居中、使用 100dvh，并让标题栏 sticky
+- Điều chỉnh kiểu thu gọn thẻ: Sau khi thu gọn chỉ hiện tiêu đề (ví dụ "Đối chiếu với nguyên tác · Ảnh hưởng sai lệch")
 
 
 ## v0.7.4
-- 聊天区“生成/重Roll”按钮支持拖动：拖动手柄⋮⋮可固定位置；双击手柄恢复自动贴近发送键
+- Sửa lỗi thanh tiêu đề bảng điều khiển trên di động bị đẩy ra khỏi màn hình: Di động không còn căn giữa dọc, sử dụng 100dvh, và để thanh tiêu đề sticky
+
+
+## v0.7.4
+- Nút "Tạo/Re-Roll" khu vực chat hỗ trợ kéo thả: Kéo tay cầm ⋮⋮ để cố định vị trí; nhấp đúp tay cầm để khôi phục tự động dính gần nút gửi
