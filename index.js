@@ -2994,9 +2994,55 @@ function parseStatData(text, mode = 'json') {
 
 function normalizeStatData(data) {
   const obj = (data && typeof data === 'object') ? data : {};
-  const pc = (obj.pc && typeof obj.pc === 'object') ? obj.pc : {};
-  const mods = (obj.mods && typeof obj.mods === 'object') ? obj.mods : {};
-  const context = (obj.context && typeof obj.context === 'object') ? obj.context : {};
+
+  // Cấu hình mapping cho "Luân Hồi Nhạc Viên"
+  const mainChar = obj["Nhân Vật Chính"] || {};
+  const basicInfo = mainChar["Thông Tin Cơ Bản"] || {};
+  const statsBoard = mainChar["Bảng Chỉ Số"] || {};
+  const sixStats = statsBoard["Sáu Chỉ Số"] || {};
+  const derivedStats = statsBoard["Thuộc Tính Dẫn Xuất"] || {};
+  
+  // 1. Map chỉ số nhân vật (PC)
+  const pc = {
+    name: basicInfo["Họ Tên"] || "Người Chơi",
+    // Chuyển đổi tên chỉ số tiếng Việt sang chuẩn tiếng Anh (D&D like)
+    str: Number(sixStats["Sức Mạnh"] || 0),
+    dex: Number(sixStats["Nhanh Nhẹn"] || 0),
+    con: Number(sixStats["Thể Chất"] || 0),
+    int: Number(sixStats["Trí Tuệ"] || 0),
+    wis: Number(sixStats["Trí Tuệ"] || 0), // Dùng tạm Trí Tuệ cho Wisdom
+    cha: Number(sixStats["Mị Lực"] || 0),
+    luk: Number(sixStats["May Mắn"] || 0),
+    atk: Number(derivedStats["Vật Lý ATK"] || 0),
+    hp: Number(statsBoard["HP_Cur"] || 0),
+    hp_max: Number(statsBoard["HP_Max"] || 0)
+  };
+
+  // 2. Map Buff/Debuff vào Mods
+  const mods = {};
+  const buffs = mainChar["Đặc Tính Buff"] || {};
+  for (const [key, val] of Object.entries(buffs)) {
+    // Lấy cấp độ buff làm giá trị cộng thêm
+    mods[key] = Number(val["Cấp Độ"] || 1);
+  }
+
+  // 3. Map Bối cảnh
+  const statusInfo = mainChar["Vị Trí Và Trạng Thái"] || {};
+  const context = {
+    location: statusInfo["Vị Trí Hiện Tại"] || "",
+    world: statusInfo["Thế Giới Hiện Tại"] || "",
+    state: statusInfo["Trạng Thái Hiện Tại"] || ""
+  };
+
+  // Nếu không tìm thấy cấu trúc tiếng Việt, thử fallback về cấu trúc tiếng Anh cũ
+  if (!mainChar["Thông Tin Cơ Bản"] && (obj.pc || obj.mods)) {
+     return {
+        pc: (obj.pc && typeof obj.pc === 'object') ? obj.pc : {},
+        mods: (obj.mods && typeof obj.mods === 'object') ? obj.mods : {},
+        context: (obj.context && typeof obj.context === 'object') ? obj.context : {}
+     };
+  }
+
   return { pc, mods, context };
 }
 
@@ -8181,6 +8227,7 @@ function init() {
 }
 
 init();
+
 
 
 
