@@ -2993,71 +2993,53 @@ function parseStatData(text, mode = 'json') {
 }
 
 function normalizeStatData(data) {
-  // 1. Xử lý an toàn đầu vào (chống lỗi null/undefined)
-  let obj = (data && typeof data === 'object') ? data : {};
+  const obj = (data && typeof data === 'object') ? data : {};
 
-  // 2. Tự động bóc tách nếu biến bị lồng trong một key tên là "stat_data" hoặc "value"
-  if (obj.stat_data && typeof obj.stat_data === 'object') obj = obj.stat_data;
-  else if (obj.value && typeof obj.value === 'object') obj = obj.value;
+  // --- [FIX BẮT ĐẦU] Hỗ trợ cấu trúc Zod Tiếng Việt ---
+  if (obj["Nhân Vật Chính"] && obj["Nhân Vật Chính"]["Bảng Chỉ Số"]) {
+    const bangChiSo = obj["Nhân Vật Chính"]["Bảng Chỉ Số"];
+    const sauChiSo = bangChiSo["Sáu Chỉ Số"] || {};
+    const danXuat = bangChiSo["Thuộc Tính Dẫn Xuất"] || {};
+    
+    // Ánh xạ từ Tiếng Việt sang các chỉ số chuẩn mà công thức ROLL (d20) hiểu được
+    const mappedPC = {
+      // Chỉ số cơ bản
+      str: Number(sauChiSo["Sức Mạnh"] || 0),   // Strength
+      dex: Number(sauChiSo["Nhanh Nhẹn"] || 0), // Dexterity
+      con: Number(sauChiSo["Thể Chất"] || 0),   // Constitution
+      int: Number(sauChiSo["Trí Tuệ"] || 0),    // Intelligence
+      wis: Number(sauChiSo["Trí Tuệ"] || 0),    // Wisdom (Dùng tạm Trí Tuệ nếu không có Cảm Tri)
+      cha: Number(sauChiSo["Mị Lực"] || 0),     // Charisma
+      luc: Number(sauChiSo["May Mắn"] || 0),    // Luck
 
-  // 3. Định vị dữ liệu "Luân Hồi Nhạc Viên" (Theo file Zod của bạn)
-  // Ưu tiên tìm "Nhân Vật Chính", nếu không thấy thì thử tìm trong stat_data lần nữa
-  const mainChar = obj["Nhân Vật Chính"] || obj?.stat_data?.["Nhân Vật Chính"] || {};
-  
-  // Nếu vẫn không tìm thấy "Nhân Vật Chính", thử trả về cấu trúc rỗng để không báo lỗi crash
-  if (Object.keys(mainChar).length === 0 && !obj.pc) {
-      console.warn("[ROLL Debug] Không tìm thấy key 'Nhân Vật Chính'. Dữ liệu nhận được:", obj);
+      // Chỉ số thực (nếu có dùng công thức nâng cao)
+      str_real: Number(sauChiSo["Sức Mạnh Thực"] || 0),
+      dex_real: Number(sauChiSo["Nhanh Nhẹn Thực"] || 0),
+      
+      // Các chỉ số chiến đấu dẫn xuất
+      atk: Number(danXuat["Vật Lý ATK"] || 0),  // Attack
+      def: Number(danXuat["Vật Lý DEF"] || 0),  // Defense
+      matk: Number(danXuat["Pháp Thuật ATK"] || 0),
+      
+      // HP/EP
+      hp: Number(bangChiSo["HP_Cur"] || 0),
+      hp_max: Number(bangChiSo["HP_Max"] || 0)
+    };
+
+    return { 
+      pc: mappedPC, 
+      mods: obj.mods || {}, 
+      context: obj.context || {} 
+    };
   }
+  // --- [FIX KẾT THÚC] ---
 
-  const basicInfo = mainChar["Thông Tin Cơ Bản"] || {};
-  const statsBoard = mainChar["Bảng Chỉ Số"] || {};
-  const sixStats = statsBoard["Sáu Chỉ Số"] || {};
-  const derivedStats = statsBoard["Thuộc Tính Dẫn Xuất"] || {};
-  
-  // 4. MAP DỮ LIỆU: Chuyển từ Tiếng Việt sang biến chuẩn
-  const pc = {
-    name: basicInfo["Họ Tên"] || "Người Chơi",
-    // Ép kiểu Number để đảm bảo tính toán không bị lỗi chuỗi
-    str: Number(sixStats["Sức Mạnh"] || 0),
-    dex: Number(sixStats["Nhanh Nhẹn"] || 0),
-    con: Number(sixStats["Thể Chất"] || 0),
-    int: Number(sixStats["Trí Tuệ"] || 0),
-    wis: Number(sixStats["Trí Tuệ"] || 0), // Dùng tạm Trí Tuệ
-    cha: Number(sixStats["Mị Lực"] || 0),
-    luk: Number(sixStats["May Mắn"] || 0),
-    atk: Number(derivedStats["Vật Lý ATK"] || 0),
-    hp: Number(statsBoard["HP_Cur"] || 0),
-    hp_max: Number(statsBoard["HP_Max"] || 0)
-  };
-
-  // 5. Lấy danh sách Buff
-  const mods = {};
-  const buffs = mainChar["Đặc Tính Buff"] || {};
-  for (const [key, val] of Object.entries(buffs)) {
-    if (val && typeof val === 'object') {
-        mods[key] = Number(val["Cấp Độ"] || 1);
-    }
-  }
-
-  // 6. Lấy bối cảnh
-  const statusInfo = mainChar["Vị Trí Và Trạng Thái"] || {};
-  const context = {
-    location: statusInfo["Vị Trí Hiện Tại"] || "",
-    world: statusInfo["Thế Giới Hiện Tại"] || "",
-    state: statusInfo["Trạng Thái Hiện Tại"] || ""
-  };
-
-  // Fallback: Nếu không tìm thấy cấu trúc tiếng Việt, thử cấu trúc tiếng Anh cũ
-  if (!mainChar["Thông Tin Cơ Bản"] && (obj.pc || obj.mods)) {
-     return {
-        pc: (obj.pc && typeof obj.pc === 'object') ? obj.pc : {},
-        mods: (obj.mods && typeof obj.mods === 'object') ? obj.mods : {},
-        context: (obj.context && typeof obj.context === 'object') ? obj.context : {}
-     };
-  }
-
+  const pc = (obj.pc && typeof obj.pc === 'object') ? obj.pc : {};
+  const mods = (obj.mods && typeof obj.mods === 'object') ? obj.mods : {};
+  const context = (obj.context && typeof obj.context === 'object') ? obj.context : {};
   return { pc, mods, context };
 }
+
 function buildModifierBreakdown(mods, sources) {
   const srcList = Array.isArray(sources) && sources.length
     ? sources
@@ -8239,6 +8221,7 @@ function init() {
 }
 
 init();
+
 
 
 
