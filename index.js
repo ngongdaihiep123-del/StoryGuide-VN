@@ -3003,11 +3003,6 @@ function parseStatData(text, mode = 'json') {
   try { return JSON.parse(t); } catch { return null; }
 }
 
-  const parsed = safeJsonParse(raw);
-  if (!parsed || typeof parsed !== 'object') return null;
-  return parsed;
-}
-
 function normalizeStatData(data) {
   const obj = (data && typeof data === 'object') ? data : {};
 
@@ -8248,6 +8243,7 @@ function init() {
 }
 
 init();
+
 
 
 
