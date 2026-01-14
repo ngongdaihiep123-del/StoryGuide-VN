@@ -6829,52 +6829,59 @@ function pullSettingsToUi() {
   $('#sg_autoBindWorldInfo').prop('checked', !!s.autoBindWorldInfo);
   $('#sg_autoBindWorldInfoPrefix').val(String(s.autoBindWorldInfoPrefix || 'SG').trim() || 'SG');
 
-  s.wiTriggerEnabled = $('#sg_wiTriggerEnabled').is(':checked');
-  s.wiTriggerLookbackMessages = clampInt($('#sg_wiTriggerLookbackMessages').val(), 5, 120, s.wiTriggerLookbackMessages || 20);
-  s.wiTriggerIncludeUserMessage = $('#sg_wiTriggerIncludeUserMessage').is(':checked');
-  s.wiTriggerUserMessageWeight = clampFloat($('#sg_wiTriggerUserMessageWeight').val(), 0, 10, s.wiTriggerUserMessageWeight ?? 1.6);
-  s.wiTriggerStartAfterAssistantMessages = clampInt($('#sg_wiTriggerStartAfterAssistantMessages').val(), 0, 200000, s.wiTriggerStartAfterAssistantMessages || 0);
-  s.wiTriggerMaxEntries = clampInt($('#sg_wiTriggerMaxEntries').val(), 1, 20, s.wiTriggerMaxEntries || 4);
-  s.wiTriggerMinScore = clampFloat($('#sg_wiTriggerMinScore').val(), 0, 1, (s.wiTriggerMinScore ?? 0.08));
-  s.wiTriggerMaxKeywords = clampInt($('#sg_wiTriggerMaxKeywords').val(), 1, 200, s.wiTriggerMaxKeywords || 24);
-  s.wiTriggerInjectStyle = String($('#sg_wiTriggerInjectStyle').val() || s.wiTriggerInjectStyle || 'hidden');
-  s.wiTriggerDebugLog = $('#sg_wiTriggerDebugLog').is(':checked');
+  $('#sg_wiTriggerEnabled').prop('checked', !!s.wiTriggerEnabled);
+  $('#sg_wiTriggerLookbackMessages').val(s.wiTriggerLookbackMessages || 20);
+  $('#sg_wiTriggerIncludeUserMessage').prop('checked', !!s.wiTriggerIncludeUserMessage);
+  $('#sg_wiTriggerUserMessageWeight').val(s.wiTriggerUserMessageWeight ?? 1.6);
+  $('#sg_wiTriggerStartAfterAssistantMessages').val(s.wiTriggerStartAfterAssistantMessages || 0);
+  $('#sg_wiTriggerMaxEntries').val(s.wiTriggerMaxEntries || 4);
+  $('#sg_wiTriggerMinScore').val(s.wiTriggerMinScore ?? 0.08);
+  $('#sg_wiTriggerMaxKeywords').val(s.wiTriggerMaxKeywords || 24);
+  $('#sg_wiTriggerInjectStyle').val(s.wiTriggerInjectStyle || 'hidden');
+  $('#sg_wiTriggerDebugLog').prop('checked', !!s.wiTriggerDebugLog);
 
-  s.wiRollEnabled = $('#sg_wiRollEnabled').is(':checked');
-  s.wiRollStatSource = String($('#sg_wiRollStatSource').val() || s.wiRollStatSource || 'variable');
-  s.wiRollStatVarName = String($('#sg_wiRollStatVarName').val() || s.wiRollStatVarName || 'stat_data').trim();
-  s.wiRollRandomWeight = clampFloat($('#sg_wiRollRandomWeight').val(), 0, 1, s.wiRollRandomWeight ?? 0.3);
-  s.wiRollDifficulty = String($('#sg_wiRollDifficulty').val() || s.wiRollDifficulty || 'normal');
-  s.wiRollInjectStyle = String($('#sg_wiRollInjectStyle').val() || s.wiRollInjectStyle || 'hidden');
-  s.wiRollDebugLog = $('#sg_wiRollDebugLog').is(':checked');
-  s.wiRollStatParseMode = String($('#sg_wiRollStatParseMode').val() || s.wiRollStatParseMode || 'json');
-  s.wiRollProvider = String($('#sg_wiRollProvider').val() || s.wiRollProvider || 'custom');
-  s.wiRollCustomEndpoint = String($('#sg_wiRollCustomEndpoint').val() || s.wiRollCustomEndpoint || '').trim();
-  s.wiRollCustomApiKey = String($('#sg_wiRollCustomApiKey').val() || s.wiRollCustomApiKey || '');
-  s.wiRollCustomModel = String($('#sg_wiRollCustomModel').val() || s.wiRollCustomModel || 'gpt-4o-mini');
-  s.wiRollCustomMaxTokens = clampInt($('#sg_wiRollCustomMaxTokens').val(), 128, 200000, s.wiRollCustomMaxTokens || 512);
-  s.wiRollCustomTopP = clampFloat($('#sg_wiRollCustomTopP').val(), 0, 1, s.wiRollCustomTopP ?? 0.95);
-  s.wiRollCustomTemperature = clampFloat($('#sg_wiRollCustomTemperature').val(), 0, 2, s.wiRollCustomTemperature ?? 0.2);
-  s.wiRollCustomStream = $('#sg_wiRollCustomStream').is(':checked');
-  s.wiRollSystemPrompt = String($('#sg_wiRollSystemPrompt').val() || '').trim() || DEFAULT_ROLL_SYSTEM_PROMPT;
+  // 2. Cài đặt MATCH MODE & INDEX API
+  $('#sg_wiTriggerMatchMode').val(s.wiTriggerMatchMode || 'local');
+  $('#sg_wiIndexPrefilterTopK').val(s.wiIndexPrefilterTopK || 24);
+  $('#sg_wiIndexProvider').val(s.wiIndexProvider || 'st');
+  $('#sg_wiIndexTemperature').val(s.wiIndexTemperature || 0.2);
+  $('#sg_wiIndexSystemPrompt').val(s.wiIndexSystemPrompt || DEFAULT_INDEX_SYSTEM_PROMPT);
+  $('#sg_wiIndexUserTemplate').val(s.wiIndexUserTemplate || DEFAULT_INDEX_USER_TEMPLATE);
+  
+  // API Index Custom
+  $('#sg_wiIndexCustomEndpoint').val(s.wiIndexCustomEndpoint || '');
+  $('#sg_wiIndexCustomApiKey').val(s.wiIndexCustomApiKey || '');
+  $('#sg_wiIndexCustomModel').val(s.wiIndexCustomModel || 'gpt-4o-mini');
+  $('#sg_wiIndexCustomMaxTokens').val(s.wiIndexCustomMaxTokens || 1024);
+  $('#sg_wiIndexTopP').val(s.wiIndexTopP || 0.95);
+  $('#sg_wiIndexCustomStream').prop('checked', !!s.wiIndexCustomStream);
 
-  s.wiTriggerMatchMode = String($('#sg_wiTriggerMatchMode').val() || s.wiTriggerMatchMode || 'local');
-  s.wiIndexPrefilterTopK = clampInt($('#sg_wiIndexPrefilterTopK').val(), 5, 80, s.wiIndexPrefilterTopK ?? 24);
-  s.wiIndexProvider = String($('#sg_wiIndexProvider').val() || s.wiIndexProvider || 'st');
-  s.wiIndexTemperature = clampFloat($('#sg_wiIndexTemperature').val(), 0, 2, s.wiIndexTemperature ?? 0.2);
-  s.wiIndexSystemPrompt = String($('#sg_wiIndexSystemPrompt').val() || s.wiIndexSystemPrompt || DEFAULT_INDEX_SYSTEM_PROMPT);
-  s.wiIndexUserTemplate = String($('#sg_wiIndexUserTemplate').val() || s.wiIndexUserTemplate || DEFAULT_INDEX_USER_TEMPLATE);
-  s.wiIndexCustomEndpoint = String($('#sg_wiIndexCustomEndpoint').val() || s.wiIndexCustomEndpoint || '');
-  s.wiIndexCustomApiKey = String($('#sg_wiIndexCustomApiKey').val() || s.wiIndexCustomApiKey || '');
-  s.wiIndexCustomModel = String($('#sg_wiIndexCustomModel').val() || s.wiIndexCustomModel || 'gpt-4o-mini');
-  s.wiIndexCustomMaxTokens = clampInt($('#sg_wiIndexCustomMaxTokens').val(), 128, 200000, s.wiIndexCustomMaxTokens || 1024);
-  s.wiIndexTopP = clampFloat($('#sg_wiIndexTopP').val(), 0, 1, s.wiIndexTopP ?? 0.95);
-  s.wiIndexCustomStream = $('#sg_wiIndexCustomStream').is(':checked');
+  // 3. Cài đặt ROLL (Phán định)
+  $('#sg_wiRollEnabled').prop('checked', !!s.wiRollEnabled);
+  $('#sg_wiRollStatSource').val(s.wiRollStatSource || 'variable');
+  $('#sg_wiRollStatVarName').val(s.wiRollStatVarName || 'stat_data');
+  $('#sg_wiRollRandomWeight').val(s.wiRollRandomWeight || 0.3);
+  $('#sg_wiRollDifficulty').val(s.wiRollDifficulty || 'normal');
+  $('#sg_wiRollInjectStyle').val(s.wiRollInjectStyle || 'hidden');
+  $('#sg_wiRollDebugLog').prop('checked', !!s.wiRollDebugLog);
+  $('#sg_wiRollStatParseMode').val(s.wiRollStatParseMode || 'json');
+  $('#sg_wiRollProvider').val(s.wiRollProvider || 'custom');
+  
+  // API ROLL Custom
+  $('#sg_wiRollCustomEndpoint').val(s.wiRollCustomEndpoint || '');
+  $('#sg_wiRollCustomApiKey').val(s.wiRollCustomApiKey || '');
+  $('#sg_wiRollCustomModel').val(s.wiRollCustomModel || 'gpt-4o-mini');
+  $('#sg_wiRollCustomMaxTokens').val(s.wiRollCustomMaxTokens || 512);
+  $('#sg_wiRollCustomTopP').val(s.wiRollCustomTopP || 0.95);
+  $('#sg_wiRollCustomTemperature').val(s.wiRollCustomTemperature || 0.2);
+  $('#sg_wiRollCustomStream').prop('checked', !!s.wiRollCustomStream);
+  $('#sg_wiRollSystemPrompt').val(s.wiRollSystemPrompt || DEFAULT_ROLL_SYSTEM_PROMPT);
 
-  s.wiBlueIndexMode = String($('#sg_wiBlueIndexMode').val() || s.wiBlueIndexMode || 'live');
-  s.wiBlueIndexFile = String($('#sg_wiBlueIndexFile').val() || '').trim();
-  s.summaryMaxCharsPerMessage = clampInt($('#sg_summaryMaxChars').val(), 200, 8000, s.summaryMaxCharsPerMessage || 4000);
-  s.summaryMaxTotalChars = clampInt($('#sg_summaryMaxTotalChars').val(), 2000, 80000, s.summaryMaxTotalChars || 24000);
+  // 4. Các cài đặt khác
+  $('#sg_wiBlueIndexMode').val(s.wiBlueIndexMode || 'live');
+  $('#sg_wiBlueIndexFile').val(s.wiBlueIndexFile || '');
+  $('#sg_summaryMaxChars').val(s.summaryMaxCharsPerMessage || 4000);
+  $('#sg_summaryMaxTotalChars').val(s.summaryMaxTotalChars || 24000);
 
   $('#sg_summary_custom_block').toggle(String(s.summaryProvider || 'st') === 'custom');
   $('#sg_summaryWorldInfoFile').toggle(String(s.summaryWorldInfoTarget || 'chatbook') === 'file');
@@ -8174,5 +8181,6 @@ function init() {
 }
 
 init();
+
 
 
