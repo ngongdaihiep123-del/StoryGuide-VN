@@ -5448,7 +5448,8 @@ function buildModalHtml() {
           <span class="sg-badge">📘</span>
           Hướng dẫn Cốt truyện <span class="sg-sub">StoryGuide v${SG_VERSION}</span>
         </div>
-        <div class="sg-modal-actions">
+        <div class="sg-modal-actions" style="display: flex; gap: 10px;">
+          <button class="menu_button sg-btn" id="sg_save_header" style="background: var(--SmartThemeQuoteColor); color: #fff;">💾 Lưu Cài Đặt</button>
           <button class="menu_button sg-btn" id="sg_close">Đóng</button>
         </div>
       </div>
@@ -6167,6 +6168,18 @@ function ensureModal() {
 
   $('#sg_modal_backdrop').on('click', (e) => { if (e.target && e.target.id === 'sg_modal_backdrop') closeModal(); });
   $('#sg_close').on('click', closeModal);
+  $('#sg_save_header').on('click', () => {
+    pullUiToSettings(); // Lấy dữ liệu từ giao diện
+    saveSettings();     // Lưu xuống file
+    setStatus('Đã lưu cài đặt thành công! (Có thể F5)', 'ok');
+    // Hiệu ứng nháy nút để biết đã bấm
+    const btn = document.getElementById('sg_save_header');
+    if(btn) {
+        const oldText = btn.innerText;
+        btn.innerText = "✅ Đã Lưu";
+        setTimeout(() => btn.innerText = oldText, 1500);
+    }
+  });
 
   $('#sg_tab_md').on('click', () => showPane('md'));
   $('#sg_tab_json').on('click', () => showPane('json'));
@@ -8140,3 +8153,4 @@ function init() {
 }
 
 init();
+
