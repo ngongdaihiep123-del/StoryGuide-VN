@@ -2993,24 +2993,36 @@ function parseStatData(text, mode = 'json') {
 }
 
 function normalizeStatData(data) {
-  const obj = (data && typeof data === 'object') ? data : {};
+  // 1. Xử lý an toàn đầu vào (chống lỗi null/undefined)
+  let obj = (data && typeof data === 'object') ? data : {};
 
-  // Cấu hình mapping cho "Luân Hồi Nhạc Viên"
-  const mainChar = obj["Nhân Vật Chính"] || {};
+  // 2. Tự động bóc tách nếu biến bị lồng trong một key tên là "stat_data" hoặc "value"
+  if (obj.stat_data && typeof obj.stat_data === 'object') obj = obj.stat_data;
+  else if (obj.value && typeof obj.value === 'object') obj = obj.value;
+
+  // 3. Định vị dữ liệu "Luân Hồi Nhạc Viên" (Theo file Zod của bạn)
+  // Ưu tiên tìm "Nhân Vật Chính", nếu không thấy thì thử tìm trong stat_data lần nữa
+  const mainChar = obj["Nhân Vật Chính"] || obj?.stat_data?.["Nhân Vật Chính"] || {};
+  
+  // Nếu vẫn không tìm thấy "Nhân Vật Chính", thử trả về cấu trúc rỗng để không báo lỗi crash
+  if (Object.keys(mainChar).length === 0 && !obj.pc) {
+      console.warn("[ROLL Debug] Không tìm thấy key 'Nhân Vật Chính'. Dữ liệu nhận được:", obj);
+  }
+
   const basicInfo = mainChar["Thông Tin Cơ Bản"] || {};
   const statsBoard = mainChar["Bảng Chỉ Số"] || {};
   const sixStats = statsBoard["Sáu Chỉ Số"] || {};
   const derivedStats = statsBoard["Thuộc Tính Dẫn Xuất"] || {};
   
-  // 1. Map chỉ số nhân vật (PC)
+  // 4. MAP DỮ LIỆU: Chuyển từ Tiếng Việt sang biến chuẩn
   const pc = {
     name: basicInfo["Họ Tên"] || "Người Chơi",
-    // Chuyển đổi tên chỉ số tiếng Việt sang chuẩn tiếng Anh (D&D like)
+    // Ép kiểu Number để đảm bảo tính toán không bị lỗi chuỗi
     str: Number(sixStats["Sức Mạnh"] || 0),
     dex: Number(sixStats["Nhanh Nhẹn"] || 0),
     con: Number(sixStats["Thể Chất"] || 0),
     int: Number(sixStats["Trí Tuệ"] || 0),
-    wis: Number(sixStats["Trí Tuệ"] || 0), // Dùng tạm Trí Tuệ cho Wisdom
+    wis: Number(sixStats["Trí Tuệ"] || 0), // Dùng tạm Trí Tuệ
     cha: Number(sixStats["Mị Lực"] || 0),
     luk: Number(sixStats["May Mắn"] || 0),
     atk: Number(derivedStats["Vật Lý ATK"] || 0),
@@ -3018,15 +3030,16 @@ function normalizeStatData(data) {
     hp_max: Number(statsBoard["HP_Max"] || 0)
   };
 
-  // 2. Map Buff/Debuff vào Mods
+  // 5. Lấy danh sách Buff
   const mods = {};
   const buffs = mainChar["Đặc Tính Buff"] || {};
   for (const [key, val] of Object.entries(buffs)) {
-    // Lấy cấp độ buff làm giá trị cộng thêm
-    mods[key] = Number(val["Cấp Độ"] || 1);
+    if (val && typeof val === 'object') {
+        mods[key] = Number(val["Cấp Độ"] || 1);
+    }
   }
 
-  // 3. Map Bối cảnh
+  // 6. Lấy bối cảnh
   const statusInfo = mainChar["Vị Trí Và Trạng Thái"] || {};
   const context = {
     location: statusInfo["Vị Trí Hiện Tại"] || "",
@@ -3034,7 +3047,7 @@ function normalizeStatData(data) {
     state: statusInfo["Trạng Thái Hiện Tại"] || ""
   };
 
-  // Nếu không tìm thấy cấu trúc tiếng Việt, thử fallback về cấu trúc tiếng Anh cũ
+  // Fallback: Nếu không tìm thấy cấu trúc tiếng Việt, thử cấu trúc tiếng Anh cũ
   if (!mainChar["Thông Tin Cơ Bản"] && (obj.pc || obj.mods)) {
      return {
         pc: (obj.pc && typeof obj.pc === 'object') ? obj.pc : {},
@@ -3045,7 +3058,6 @@ function normalizeStatData(data) {
 
   return { pc, mods, context };
 }
-
 function buildModifierBreakdown(mods, sources) {
   const srcList = Array.isArray(sources) && sources.length
     ? sources
@@ -8227,6 +8239,7 @@ function init() {
 }
 
 init();
+
 
 
 
