@@ -2961,6 +2961,9 @@ function extractStatusBlock(text, tagName = 'status_current_variable') {
 }
 
 function parseStatData(text, mode = 'json') {
+  // [QUAN TRỌNG] Nếu dữ liệu vào đã là Object chuẩn (do Zod tạo ra), trả về luôn, không ép thành chuỗi nữa
+  if (typeof text === 'object' && text !== null) return text; 
+  
   const raw = String(text || '').trim();
   if (!raw) return null;
 
@@ -2987,6 +2990,19 @@ function parseStatData(text, mode = 'json') {
     return out;
   }
 
+  // Xử lý JSON (đoạn này giữ nguyên logic nhưng viết gọn và an toàn hơn)
+  let t = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  if (t.startsWith('{') && t.endsWith('}')) {
+      // Giữ nguyên
+  } else {
+      const first = t.indexOf('{');
+      const last = t.lastIndexOf('}');
+      if (first !== -1 && last !== -1 && last > first) t = t.slice(first, last + 1);
+  }
+
+  try { return JSON.parse(t); } catch { return null; }
+}
+
   const parsed = safeJsonParse(raw);
   if (!parsed || typeof parsed !== 'object') return null;
   return parsed;
@@ -2995,35 +3011,35 @@ function parseStatData(text, mode = 'json') {
 function normalizeStatData(data) {
   const obj = (data && typeof data === 'object') ? data : {};
 
-  // --- [FIX BẮT ĐẦU] Hỗ trợ cấu trúc Zod Tiếng Việt ---
-  if (obj["Nhân Vật Chính"] && obj["Nhân Vật Chính"]["Bảng Chỉ Số"]) {
-    const bangChiSo = obj["Nhân Vật Chính"]["Bảng Chỉ Số"];
+  // --- [FIX: HỖ TRỢ ZOD TIẾNG VIỆT] ---
+  // Kiểm tra cấu trúc từ file zodmoi.json
+  if (obj["Nhân Vật Chính"] || obj["Thông Tin Cơ Bản"] || obj["Bảng Chỉ Số"]) {
+    // Tìm vị trí gốc của dữ liệu (xử lý trường hợp lồng nhau)
+    const root = obj["Nhân Vật Chính"] || obj;
+    const bangChiSo = root["Bảng Chỉ Số"] || {};
     const sauChiSo = bangChiSo["Sáu Chỉ Số"] || {};
     const danXuat = bangChiSo["Thuộc Tính Dẫn Xuất"] || {};
     
-    // Ánh xạ từ Tiếng Việt sang các chỉ số chuẩn mà công thức ROLL (d20) hiểu được
+    // Ánh xạ chỉ số Tiếng Việt sang biến chuẩn (str, dex, int...)
     const mappedPC = {
       // Chỉ số cơ bản
-      str: Number(sauChiSo["Sức Mạnh"] || 0),   // Strength
-      dex: Number(sauChiSo["Nhanh Nhẹn"] || 0), // Dexterity
-      con: Number(sauChiSo["Thể Chất"] || 0),   // Constitution
-      int: Number(sauChiSo["Trí Tuệ"] || 0),    // Intelligence
-      wis: Number(sauChiSo["Trí Tuệ"] || 0),    // Wisdom (Dùng tạm Trí Tuệ nếu không có Cảm Tri)
-      cha: Number(sauChiSo["Mị Lực"] || 0),     // Charisma
-      luc: Number(sauChiSo["May Mắn"] || 0),    // Luck
+      str: Number(sauChiSo["Sức Mạnh"] || 0),
+      dex: Number(sauChiSo["Nhanh Nhẹn"] || 0),
+      con: Number(sauChiSo["Thể Chất"] || 0),
+      int: Number(sauChiSo["Trí Tuệ"] || 0),
+      wis: Number(sauChiSo["Trí Tuệ"] || 0), // Dùng Trí Tuệ thay thế nếu không có Cảm Tri
+      cha: Number(sauChiSo["Mị Lực"] || 0),
+      luc: Number(sauChiSo["May Mắn"] || 0),
 
-      // Chỉ số thực (nếu có dùng công thức nâng cao)
-      str_real: Number(sauChiSo["Sức Mạnh Thực"] || 0),
-      dex_real: Number(sauChiSo["Nhanh Nhẹn Thực"] || 0),
-      
-      // Các chỉ số chiến đấu dẫn xuất
-      atk: Number(danXuat["Vật Lý ATK"] || 0),  // Attack
-      def: Number(danXuat["Vật Lý DEF"] || 0),  // Defense
-      matk: Number(danXuat["Pháp Thuật ATK"] || 0),
-      
-      // HP/EP
+      // Chỉ số HP/EP
       hp: Number(bangChiSo["HP_Cur"] || 0),
-      hp_max: Number(bangChiSo["HP_Max"] || 0)
+      hp_max: Number(bangChiSo["HP_Max"] || 0),
+      ep: Number(bangChiSo["EP_Cur"] || 0),
+
+      // Chỉ số chiến đấu
+      atk: Number(danXuat["Vật Lý ATK"] || 0),
+      def: Number(danXuat["Vật Lý DEF"] || 0),
+      matk: Number(danXuat["Pháp Thuật ATK"] || 0)
     };
 
     return { 
@@ -3032,7 +3048,7 @@ function normalizeStatData(data) {
       context: obj.context || {} 
     };
   }
-  // --- [FIX KẾT THÚC] ---
+  // --- [HẾT PHẦN FIX] ---
 
   const pc = (obj.pc && typeof obj.pc === 'object') ? obj.pc : {};
   const mods = (obj.mods && typeof obj.mods === 'object') ? obj.mods : {};
@@ -3379,17 +3395,29 @@ async function resolveStatDataViaSlashCommand(settings) {
   if (!key) return { statData: null, rawText: '' };
 
   try {
-    // Thử dùng lệnh /getvar để đọc biến (cách ổn định nhất)
     const result = await execSlash(`/getvar ${key}`);
+    
+    // --- [FIX: NẾU KẾT QUẢ ĐÃ LÀ OBJECT THÌ DÙNG LUÔN] ---
+    if (result && typeof result === 'object' && !Array.isArray(result)) {
+        // Kiểm tra xem có phải là dữ liệu nhân vật không (có pc hoặc Nhân Vật Chính)
+        if (result.pc || result["Nhân Vật Chính"] || result["Bảng Chỉ Số"]) {
+             return { statData: result, rawText: JSON.stringify(result) };
+        }
+        // Nếu là object wrapper của ST (ví dụ {data: "..."})
+        if (result.data && typeof result.data === 'string') {
+             const parsed = parseStatData(result.data, s.wiRollStatParseMode || 'json');
+             if (parsed) return { statData: parsed, rawText: result.data };
+        }
+    }
+    // -----------------------------------------------------
+
     const raw = slashOutputToText(result);
 
     if (!raw || raw.trim() === '' || raw.trim() === 'undefined' || raw.trim() === 'null') {
       return { statData: null, rawText: '' };
     }
 
-    // Phân tích nội dung biến
     if (typeof raw === 'string') {
-      // Thử phân tích JSON
       const parsed = parseStatData(raw, s.wiRollStatParseMode || 'json');
       if (parsed) {
         return { statData: parsed, rawText: raw };
@@ -3398,7 +3426,6 @@ async function resolveStatDataViaSlashCommand(settings) {
 
     return { statData: null, rawText: raw };
   } catch (e) {
-    // Khi lệnh /getvar thất bại thì xử lý im lặng, lùi về các phương pháp khác
     console.debug('[StoryGuide] resolveStatDataViaSlashCommand failed:', e);
     return { statData: null, rawText: '' };
   }
@@ -8221,6 +8248,7 @@ function init() {
 }
 
 init();
+
 
 
 
