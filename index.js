@@ -466,7 +466,17 @@ function ensureSettings() {
   return extensionSettings[MODULE_NAME];
 }
 
-function saveSettings() { SillyTavern.getContext().saveSettingsDebounced(); }
+function saveSettings() {
+  const ctx = SillyTavern.getContext();
+  // Thử dùng hàm lưu ngay lập tức nếu có (saveSettings), nếu không thì dùng hàm chờ (Debounced)
+  if (typeof ctx.saveSettings === 'function') {
+    ctx.saveSettings();
+    console.log('[StoryGuide] Đã yêu cầu lưu cài đặt NGAY LẬP TỨC.');
+  } else {
+    ctx.saveSettingsDebounced();
+    console.log('[StoryGuide] Đã xếp hàng lưu cài đặt (Debounced).');
+  }
+}
 
 function stripHtml(input) {
   if (!input) return '';
@@ -6169,15 +6179,26 @@ function ensureModal() {
   $('#sg_modal_backdrop').on('click', (e) => { if (e.target && e.target.id === 'sg_modal_backdrop') closeModal(); });
   $('#sg_close').on('click', closeModal);
   $('#sg_save_header').on('click', () => {
-    pullUiToSettings(); // Lấy dữ liệu từ giao diện
-    saveSettings();     // Lưu xuống file
-    setStatus('Đã lưu cài đặt thành công! (Có thể F5)', 'ok');
-    // Hiệu ứng nháy nút để biết đã bấm
-    const btn = document.getElementById('sg_save_header');
-    if(btn) {
-        const oldText = btn.innerText;
-        btn.innerText = "✅ Đã Lưu";
-        setTimeout(() => btn.innerText = oldText, 1500);
+    try {
+      console.log('[StoryGuide] Bắt đầu lưu...');
+      pullUiToSettings(); // 1. Lấy dữ liệu từ giao diện
+      saveSettings();     // 2. Ghi xuống file
+      
+      // 3. Thông báo thành công
+      setStatus('✅ Đã lưu thành công! (Vui lòng đợi 3 giây trước khi F5)', 'ok');
+      
+      // Hiệu ứng nháy nút
+      const btn = document.getElementById('sg_save_header');
+      if(btn) {
+          const oldText = btn.innerText;
+          btn.innerText = "✅ Đã Ghi";
+          setTimeout(() => btn.innerText = oldText, 2000);
+      }
+    } catch (e) {
+      // 4. Nếu có lỗi, hiện đỏ lên để biết
+      console.error('[StoryGuide] LỖI KHI LƯU:', e);
+      setStatus('❌ LƯU THẤT BẠI: ' + e.message, 'err');
+      alert('Lỗi khi lưu cài đặt: ' + e.message + '\nKiểm tra Console (F12) để xem chi tiết.');
     }
   });
 
@@ -8153,4 +8174,5 @@ function init() {
 }
 
 init();
+
 
