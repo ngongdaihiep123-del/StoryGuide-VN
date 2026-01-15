@@ -6950,6 +6950,14 @@ function pullSettingsToUi() {
   $('#sg_summaryBlueWorldInfoFile').toggle(!!s.summaryToBlueWorldInfo);
   $('#sg_summaryIndexFormat').toggle(String(s.summaryWorldInfoKeyMode || 'keywords') === 'indexId');
 
+  $('#sg_roll_custom_block').toggle(String(s.wiRollProvider || 'custom') === 'custom');
+
+  // 2. Fix hiển thị API Index (Chỉ mục)
+  const matchMode = String(s.wiTriggerMatchMode || 'local');
+  const idxProvider = String(s.wiIndexProvider || 'st');
+  $('#sg_index_llm_block').toggle(matchMode === 'llm');
+  $('#sg_index_custom_block').toggle(matchMode === 'llm' && idxProvider === 'custom');
+
   updateBlueIndexInfoLabel();
 
   updateSummaryInfoLabel();
@@ -8243,6 +8251,7 @@ function init() {
 }
 
 init();
+
 
 
 
